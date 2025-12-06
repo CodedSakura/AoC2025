@@ -3,7 +3,6 @@
 #include <stdlib.h>
 #include <string.h>
 
-// 1489 - too low, but same as someone else's
 int main() {
     FILE* file_handle = fopen("input.txt", "r");
     if (file_handle == NULL) {
