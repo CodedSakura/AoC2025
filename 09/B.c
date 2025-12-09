@@ -6,8 +6,9 @@ typedef struct {
     int x, y;
 } tile_pos_t;
 
+// 4572898800 - too high
 int main() {
-    FILE* file_handle = fopen("input.tmp.txt", "r");
+    FILE* file_handle = fopen("input.txt", "r");
     if (file_handle == NULL) {
         printf("Failed to read input\n");
         return 1;
@@ -44,13 +45,44 @@ int main() {
             const int x2 = tile_a.x > tile_b.x ? tile_a.x : tile_b.x;
             const int y1 = tile_a.y < tile_b.y ? tile_a.y : tile_b.y;
             const int y2 = tile_a.y > tile_b.y ? tile_a.y : tile_b.y;
-            for (int c = 0; c < tile_count; ++c) {
-                const tile_pos_t tile_c = red_tiles[c];
-                if (x1 < tile_c.x && tile_c.x < x2 && y1 < tile_c.y && tile_c.y < y2) {
+            for (int n = 0; n < tile_count; ++n) {
+                const tile_pos_t tile_n = red_tiles[n];
+                if (x1 < tile_n.x && tile_n.x < x2 && y1 < tile_n.y && tile_n.y < y2) {
                     // tile inside area, skipping
                     goto b_loop;
                 }
             }
+            // do winding number algorithm on center point
+            const int cx = (x1 + x2) / 2;
+            const int cy = (y1 + y2) / 2;
+            int crossings = 0;
+            for (int n = 0; n < tile_count; ++n) {
+                const tile_pos_t tile_l1 = red_tiles[n];
+                const tile_pos_t tile_l2 = red_tiles[(n+1) % tile_count];
+                if (tile_l1.x == tile_l2.x) {
+                    // horizontal line
+                    continue;
+                }
+                if ((tile_l1.x > cx && tile_l2.x > cx) || (tile_l1.x < cx && tile_l2.x < cx)) {
+                    // no crossing
+                    continue;
+                }
+                if (tile_l1.y == cy) {
+                    // on the line, cannot ever be valid
+                    crossings = 0;
+                    break;
+                }
+                if (tile_l1.y > cy) {
+                    // right side
+                    continue;
+                }
+                crossings++;
+            }
+            if (crossings % 2 == 0) {
+                // not in shape
+                continue;
+            }
+
             const long long area = (long long) (x2 - x1 + 1) * (long long) (y2 - y1 + 1);
             if (area > max_area) {
                 max_area = area;
