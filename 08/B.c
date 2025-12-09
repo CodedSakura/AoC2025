@@ -13,6 +13,14 @@ typedef struct {
     long long distance;
 } connection_t;
 
+int compare_connection(const void *a, const void *b) {
+    const auto c1 = (const connection_t *)a;
+    const auto c2 = (const connection_t *)b;
+    if (c1->distance < c2->distance) return -1;
+    if (c1->distance > c2->distance) return 1;
+    return 0;
+}
+
 // took forever, but got the right answer
 int main() {
     FILE* file_handle = fopen("input.txt", "r");
@@ -66,29 +74,15 @@ int main() {
         }
     }
 
-    // bubble sort
-    connection_t *(*con_ptrs) = malloc(sizeof(connection_t*) * 1024 * 512);
-    for (int i = 0; i < connection_index; i++) {
-        con_ptrs[i] = &connections[i];
-    }
-    for (int i = 0; i < connection_index - 1; i++) {
-        // if (i % 100 == 0) printf("%d/%ld\n", i, connection_index);
-        for (int j = 0; j < connection_index - i - 1; j++) {
-            if (con_ptrs[j]->distance > con_ptrs[j + 1]->distance) {
-                connection_t* tmp = con_ptrs[j];
-                con_ptrs[j] = con_ptrs[j + 1];
-                con_ptrs[j + 1] = tmp;
-            }
-        }
-    }
+    qsort(connections, connection_index, sizeof(connection_t), compare_connection);
 
     int circuits[1024] = {[0 ... 1023] = 1024};
     for (int i = 0; i < connection_index; i++) {
-        const int circuit_a = circuits[con_ptrs[i]->a];
-        const int circuit_b = circuits[con_ptrs[i]->b];
+        const int circuit_a = circuits[connections[i].a];
+        const int circuit_b = circuits[connections[i].b];
         const int circuit = min3(circuit_a, circuit_b, i);
-        circuits[con_ptrs[i]->a] = circuit;
-        circuits[con_ptrs[i]->b] = circuit;
+        circuits[connections[i].a] = circuit;
+        circuits[connections[i].b] = circuit;
         if (circuit_a != 1024 && circuit != circuit_a) {
             // set all net_a to net
             for (int j = 0; j < box_index; ++j) {
@@ -113,14 +107,12 @@ int main() {
             }
         }
         if (all_same) {
-            const junction_box_t box_a = boxes[con_ptrs[i]->a];
-            const junction_box_t box_b = boxes[con_ptrs[i]->b];
+            const junction_box_t box_a = boxes[connections[i].a];
+            const junction_box_t box_b = boxes[connections[i].b];
             printf("%lld\n", (long long) box_a.x * (long long) box_b.x);
             break;
         }
     }
-
-    free(con_ptrs);
 
     free(connections);
 }
